@@ -1,4 +1,5 @@
 require 'uri'
+require 'byebug'
 
 module Phase5
   class Params
@@ -9,13 +10,26 @@ module Phase5
     #
     # You haven't done routing yet; but assume route params will be
     # passed in as a hash to `Params.new` as below:
+
     def initialize(req, route_params = {})
       @params = route_params
-      parse_www_encoded_form(req.query_string) unless req.query_string.nil?
+      unless req.query_string.nil?
+        q_s = parse_www_encoded_form(req.query_string)
+        @params.merge!(q_s)
+      end
+
+      unless req.body.nil?
+        r_b = parse_www_encoded_form(req.body)
+        @params.merge!(r_b)
+      end
     end
 
     def [](key)
-      @params[key.to_s]
+      if @params[key.to_s].nil?
+        @params[key.to_sym]
+      else
+        @params[key.to_s]
+      end
     end
 
     # this will be useful if we want to `puts params` in the server log
@@ -32,24 +46,35 @@ module Phase5
     # should return
     # { "user" => { "address" => { "street" => "main", "zip" => "89436" } } }
     def parse_www_encoded_form(www_encoded_form)
+      levels = {}
 
-      arr = URI::decode_www_form(www_encoded_form)
-      puts "array #{arr}"
+      tuples =  URI::decode_www_form(www_encoded_form)
+      #tuples #=> [ ["user[address][street]", "main"], ["user[address][zip]", "10012"] ]
 
-      arr.each do |pair|
-        key = pair[0].split(/\[|\]\[|\]/).inject({}) do |nest, key|
-          nest[key]
+      tuples.each do |(www_key, value)|
+        level = levels
+        keys = parse_key(www_key)
+        #p keys
+        keys.each do |key|
+          if keys.last != key
+            level[key] ||= {}
+            level = level[key]
+          else
+            level[key] = value
+          end
+        #puts level
+          #puts levels
         end
-        val = pair[1]
-        @params[key] = val
+
       end
-      puts @params
+
+      levels
     end
 
     # this should return an array
     # user[address][street] should return ['user', 'address', 'street']
     def parse_key(key)
-
+      key.split(/\]\[|\[|\]/)
     end
   end
 end
