@@ -18,15 +18,15 @@ module Phase6
     def run(req, res)
       @route_params = {}
       match_data = @pattern.match(req.path)
+      controller = @controller_class.new(req, res, {})
 
       i = 0
       while i < match_data.length
-        @route_params[i] = match_data[i]
+        @route_params[i] = match_data[i]   # not complete : (
         i+=1
       end
 
-      controller = @controller_class.new(req, res, {})
-      controller.invoke_action(@route_params)
+      controller.invoke_action(@action_name)
     end
   end
 
@@ -71,8 +71,6 @@ module Phase6
         res.status = 404
         res.body = "incorrect path"
       end
-
-      #self.send(req)
     end
 
   end

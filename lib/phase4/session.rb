@@ -1,5 +1,6 @@
 require 'json'
 require 'webrick'
+require 'byebug'
 
 module Phase4
   class Session
@@ -8,7 +9,7 @@ module Phase4
 
     attr_reader :name, :value
 
-    def initialize(req)
+    def initialize(req = {})
       cookie = req.cookies.find { |c| c.name == '_rails_lite_app' }
 
       unless cookie.nil?

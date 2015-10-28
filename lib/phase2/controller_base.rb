@@ -1,3 +1,4 @@
+require 'byebug'
 module Phase2
   class ControllerBase
     attr_reader :req, :res
